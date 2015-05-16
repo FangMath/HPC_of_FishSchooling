@@ -1,38 +1,34 @@
 function [pot2] = test_byfreeaccurate_mulSheet(targetb, sourcef, gammaf, L, Nw)
     close all;
-%% test ByFreeAccurate_singleSheet.c routine with matlab functions
+%% test ByFreeAccurate_mulSheet.cpp routine with matlab functions
 %% Copyright Fang Fang, 05/09/2015, Courant Inst.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-mex -I"../Fish/" -I"../eigen/" -v -largeArrayDims ByFreeAccurate_mulSheet.cpp ByFreeAccurate_mulSheet_routine.cpp -lmwblas CFLAGS="\$CFLAGS -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp" CXXOPTIMFLAGS="\$CXXOPTIMFLAGS -fopenmp" 
-
-%% old compile
-%mex -I"../Fish/" -I"../eigen/" -v -largeArrayDims ByFreeAccurate_singleSheet.cpp ByFreeAccurate_singleSheet_routine.cpp -lmwblas CFLAGS="\$CFLAGS -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp" CXXOPTIMFLAGS="\$CXXOPTIMFLAGS -fopenmp" 
-
+%mex -I"../Fish/" -I"../eigen/" -v -largeArrayDims ByFreeAccurate_mulSheet.cpp ByFreeAccurate_mulSheet_routine.cpp -lmwblas CFLAGS="\$CFLAGS -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp" CXXOPTIMFLAGS="\$CXXOPTIMFLAGS -fopenmp" 
 
 %%% generate random data for tests %%%%%%%%%
 nsource = 1000;
 ntarget = 900;
+Nw = 1;
 %% generate targets
 target(1,:) = rand(1,ntarget)-.5; target(2,:) = rand(1,ntarget);
 %% generate sources 
-source1(1,:) = (1:nsource)/nsource-.5; 
-source1(2,:) = source1(1,:).^2;
-gammaf1 = sin(source1(1,:));
-source2(1,:) = (1:nsource)/nsource - .5; 
-source2(2,:) = source2(1,:).^2+.5;
-gammaf2 = sin(source2(1,:));
-
-source = [source1, source2];
-gammaf = [gammaf1, gammaf2];
-Nw = 2;
-L = size(source1,2);
-for ib = 2:Nw
-L(ib) = L(ib-1)+size(source2,2); 
+source_r = (1:nsource)/nsource-.5; 
+msource_r = source_r;
+msource_i = source_r.^2;
+mgammaf = sin(source_r);
+L = length(msource_r); 
+for ib = 2:Nw 
+msource_r = [msource_r, source_r];
+msource_i = [msource_i, source_r.^2+(ib-1)/Nw];
+mgammaf = [mgammaf, sin(source_r)+(ib-1)/Nw];
+L(ib) = length(msource_r); 
 end
+
 plot(target(1,:), target(2,:), 'ro'); hold on;
-plot(source1(1,:), source1(2,:), 'b.'); hold on;
-plot(source2(1,:), source2(2,:), 'b.'); hold on;
+plot(msource_r, msource_i, 'b.'); hold on;
+source = [msource_r; msource_i];
+gammaf = mgammaf;
 %
 %%%%% use vortex sheets data  %%%%%%%%%
 %nsource = length(sourcef);
@@ -48,14 +44,18 @@ plot(source2(1,:), source2(2,:), 'b.'); hold on;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% tests starting
 tc = tic;
+itN = 10;
+for it = 1:itN
 [C1,C2] = ByFreeAccurate_mulSheet(target(1,:)',target(2,:)',source(1,:)', source(2,:)',gammaf.', L');
 pot2 = C1+C2*1i;
 pot2 = pot2/(2*1i*pi);
-tcc = toc(tc)
+end
+tcc = toc(tc)/itN
 N=nsource;
 
 %% time matlab calculations %%
 tm = tic;
+for it = 1:itN
 W(1).zetaf_r = source(1,1:L(1));
 W(1).zetaf_i = source(2,1:L(1));
 W(1).gammaf = gammaf(1:L(1));
@@ -68,7 +68,8 @@ pot = zeros(1,ntarget);
 for ib = 1:Nw
 pot=pot+bodyByFree(target, [W(ib).zetaf_r;W(ib).zetaf_i], W(ib).gammaf, L);
 end
-tmm = toc(tm)
+end
+tmm = toc(tm)/itN
 
 %% speed up ratio %%
 speed_ratio = tcc/tmm

@@ -26,9 +26,8 @@ void freebyfreesmth_mul_routine(size_t nt, double *ztreal, double *ztimag, doubl
     VectorXd zzetaf_r(nt), zzetaf_i(nt);
     VectorXd ssource_r(ns), ssource_i(ns);
     VectorXd ddistr(ns), ddelta(ns);
-
-
-    /*
+    
+/*
 #pragma omp parallel 
 {
 int  pn = omp_get_num_threads();
@@ -55,9 +54,15 @@ vector<Wing> W(Nw);
 VectorXd pot_r = VectorXd::Zero(nt,1), pot_i = VectorXd::Zero(nt,1);
 
 /* Computing */
+cout << "max threads=" << omp_get_max_threads() << endl;
+int Np = Nw;
+omp_set_num_threads(Np);
 #pragma omp parallel for 
 for (int ib = 0; ib < Nw; ++ib){
-printf("Thread %d is starting...\n",omp_get_thread_num());
+    /*
+printf("Number of threads = %d\n", omp_get_num_threads()); 
+      printf("Thread %d is starting...\n",omp_get_thread_num());
+      */
 
     /* read free sheets from array to c++ class */
     if (ib == 0){

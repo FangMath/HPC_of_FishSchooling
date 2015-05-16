@@ -1,16 +1,17 @@
 function [pot1, pot2] = test_freebyfreesmth_mul(tr, ti, sr, si, delta, distr)
-%% test FreeByFreeSmth.c routine with matlab functions
+%% test FreeByFreeSmth_mul.cpp routine with matlab functions
 %% Copyright Fang Fang, 04/27/2015, Courant Inst.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%% compile %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 mex -I"../Fish/" -I"../eigen/" -v -largeArrayDims FreeByFreeSmth_mul.cpp FreeByFreeSmth_mul_routine.cpp -lmwblas -lrt CFLAGS="\$CFLAGS -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp" CXXOPTIMFLAGS="\$CXXOPTIMFLAGS -fopenmp" 
 
 
 %%% generate random data for tests %%%%%%%%%
-Ns = 1000;
-Nt = 900;
-Nw = 8;
+Ns = 1000; % number of sources
+Nt = 900; % number of targets
+Nw = 1 % number of wings
 Lt = zeros(Nw,1); Ls = zeros(Nw,1);
+
 %% generate targets
 tr = rand(Nt,1); ti = rand(Nt,1);
 %% generate sources 
@@ -37,14 +38,18 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% tests starting
 tc = tic;
+itN = 100;
+for it = 1:itN
 [C1,C2] = FreeByFreeSmth_mul(mtr,mti, Lt, msr, msi, mdelta, mdistr, Ls);
 pot2 = C1 + C2*1i;
 pot2 = pot2/1i;
-tcc = toc(tc)
+end
+tcc = toc(tc)/itN
 
 
 %% time matlab calculations %%
 tm = tic;
+for it = 1:itN
 for ib = 1:Nw
 if ib == 1
     tr = mtr(1:Lt(1));
@@ -63,7 +68,8 @@ else
 end
 pot1{ib} = smth_matlab(tr, ti, sr, si, delta, distr);
     end
-tmm = toc(tm)
+end
+tmm = toc(tm)/itN
 
 
 %% check correctness %%
@@ -79,6 +85,7 @@ errrr
 %% speed up ratio %%
 speed_ratio = tcc/tmm
 
+%%%%%%%%%% matlab calculator %%%%%%%%%%%%
 function pot1 = smth_matlab(tr, ti, sr, si, delta, distr)
 Nt = length(tr);
 Ns = length(sr);

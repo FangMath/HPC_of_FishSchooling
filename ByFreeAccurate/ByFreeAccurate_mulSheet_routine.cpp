@@ -64,7 +64,9 @@ void ByFreeAccurate_mulSheet_routine(size_t nt, double *ztreal, double *ztimag, 
     /* Computing */
     VectorXd pot_r = VectorXd::Zero(nt,1), pot_i = VectorXd::Zero(nt,1);
 
-    omp_set_num_threads(8);
+cout << "max threads=" << omp_get_max_threads() << endl;
+int Np = Nw;
+omp_set_num_threads(Np);
 #pragma omp parallel
     {
         VectorXd ppot_r = VectorXd::Zero(nt,1), ppot_i = VectorXd::Zero(nt,1);
