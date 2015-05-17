@@ -27,7 +27,7 @@ set(gcf,'position',[100,100,wdth*100,hght*100]);
 set(gcf, 'PaperPosition', [0 0 wdth hght]); %Position plot at left hand corner with width 2 and height 6.5.
 set(gcf, 'PaperSize', [wdth hght]); %Set the paper to have width 2 and height 6.5.
 bar(log(p)/log(2), [tS1;tS5;tS6]', 'BarWidth', 1); hold on;
-legend('crunchy1', 'crunchy5', 'crunchy6', 'Location', 'best');
+legend('crunchy1', 'crunchy5', 'crunchy6', 'Location', 'NorthEast');
 title(['Strong scaling for FreeSmth, 64 wings']);
 xlim([-1,7]);
 xlabel('Number of procs');
